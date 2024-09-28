@@ -10,46 +10,46 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct U2fRegisterRequest {
-    pub app_id: String,
-    pub register_requests: Vec<RegisterRequest>,
-    pub registered_keys: Vec<RegisteredKey>,
+	pub app_id: String,
+	pub register_requests: Vec<RegisterRequest>,
+	pub registered_keys: Vec<RegisteredKey>,
 }
 
 #[derive(Serialize)]
 pub struct RegisterRequest {
-    pub version: String,
-    pub challenge: String,
+	pub version: String,
+	pub challenge: String,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisteredKey {
-    pub version: String,
-    pub key_handle: Option<String>,
-    pub app_id: String,
+	pub version: String,
+	pub key_handle: Option<String>,
+	pub app_id: String,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterResponse {
-    pub registration_data: String,
-    #[allow(dead_code)]
-    pub version: String,
-    pub client_data: String,
+	pub registration_data: String,
+	#[allow(dead_code)]
+	pub version: String,
+	pub client_data: String,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct U2fSignRequest {
-    pub app_id: String,
-    pub challenge: String,
-    pub registered_keys: Vec<RegisteredKey>,
+	pub app_id: String,
+	pub challenge: String,
+	pub registered_keys: Vec<RegisteredKey>,
 }
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SignResponse {
-    pub key_handle: String,
-    pub signature_data: String,
-    pub client_data: String,
+	pub key_handle: String,
+	pub signature_data: String,
+	pub client_data: String,
 }

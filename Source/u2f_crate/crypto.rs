@@ -35,122 +35,122 @@ use openssl::pkey::Public;
 /// which comprises a public key and other signed metadata related to the issuer
 /// of the key.
 pub struct X509PublicKey {
-    pubk: x509::X509,
+	pubk: x509::X509,
 }
 
 impl std::fmt::Debug for X509PublicKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "X509PublicKey")
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "X509PublicKey")
+	}
 }
 
 impl TryFrom<&[u8]> for X509PublicKey {
-    type Error = U2fError;
+	type Error = U2fError;
 
-    // Must be DER bytes. If you have PEM, base64decode first!
-    fn try_from(d: &[u8]) -> Result<Self, Self::Error> {
-        let pubk = x509::X509::from_der(d)?;
-        Ok(X509PublicKey { pubk })
-    }
+	// Must be DER bytes. If you have PEM, base64decode first!
+	fn try_from(d: &[u8]) -> Result<Self, Self::Error> {
+		let pubk = x509::X509::from_der(d)?;
+		Ok(X509PublicKey { pubk })
+	}
 }
 
 impl X509PublicKey {
-    pub(crate) fn common_name(&self) -> Option<String> {
-        let cert = &self.pubk;
+	pub(crate) fn common_name(&self) -> Option<String> {
+		let cert = &self.pubk;
 
-        let subject = cert.subject_name();
-        let common = subject
-            .entries_by_nid(openssl::nid::Nid::COMMONNAME)
-            .next()
-            .map(|b| b.data().as_slice());
+		let subject = cert.subject_name();
+		let common = subject
+			.entries_by_nid(openssl::nid::Nid::COMMONNAME)
+			.next()
+			.map(|b| b.data().as_slice());
 
-        if let Some(common) = common {
-            std::str::from_utf8(common).ok().map(|s| s.to_string())
-        } else {
-            None
-        }
-    }
+		if let Some(common) = common {
+			std::str::from_utf8(common).ok().map(|s| s.to_string())
+		} else {
+			None
+		}
+	}
 
-    pub(crate) fn is_secp256r1(&self) -> Result<bool, U2fError> {
-        // Can we get the public key?
-        let pk = self.pubk.public_key()?;
+	pub(crate) fn is_secp256r1(&self) -> Result<bool, U2fError> {
+		// Can we get the public key?
+		let pk = self.pubk.public_key()?;
 
-        let ec_key = pk.ec_key()?;
+		let ec_key = pk.ec_key()?;
 
-        ec_key.check_key()?;
+		ec_key.check_key()?;
 
-        let ec_grpref = ec_key.group();
+		let ec_grpref = ec_key.group();
 
-        let ec_curve = ec_grpref.curve_name().ok_or(U2fError::OpenSSLNoCurveName)?;
+		let ec_curve = ec_grpref.curve_name().ok_or(U2fError::OpenSSLNoCurveName)?;
 
-        Ok(ec_curve == nid::Nid::X9_62_PRIME256V1)
-    }
+		Ok(ec_curve == nid::Nid::X9_62_PRIME256V1)
+	}
 
-    pub(crate) fn verify_signature(
-        &self,
-        signature: &[u8],
-        verification_data: &[u8],
-    ) -> Result<bool, U2fError> {
-        let pkey = self.pubk.public_key()?;
+	pub(crate) fn verify_signature(
+		&self,
+		signature: &[u8],
+		verification_data: &[u8],
+	) -> Result<bool, U2fError> {
+		let pkey = self.pubk.public_key()?;
 
-        // TODO: Should this determine the hash type from the x509 cert? Or other?
-        let mut verifier = sign::Verifier::new(hash::MessageDigest::sha256(), &pkey)?;
-        verifier.update(verification_data)?;
-        Ok(verifier.verify(signature)?)
-    }
+		// TODO: Should this determine the hash type from the x509 cert? Or other?
+		let mut verifier = sign::Verifier::new(hash::MessageDigest::sha256(), &pkey)?;
+		verifier.update(verification_data)?;
+		Ok(verifier.verify(signature)?)
+	}
 }
 
 pub struct NISTP256Key {
-    /// The key's public X coordinate.
-    pub x: [u8; 32],
-    /// The key's public Y coordinate.
-    pub y: [u8; 32],
+	/// The key's public X coordinate.
+	pub x: [u8; 32],
+	/// The key's public Y coordinate.
+	pub y: [u8; 32],
 }
 
 impl NISTP256Key {
-    pub fn from_bytes(public_key_bytes: &[u8]) -> Result<Self, U2fError> {
-        if public_key_bytes.len() != 65 {
-            return Err(U2fError::InvalidPublicKey);
-        }
+	pub fn from_bytes(public_key_bytes: &[u8]) -> Result<Self, U2fError> {
+		if public_key_bytes.len() != 65 {
+			return Err(U2fError::InvalidPublicKey);
+		}
 
-        if public_key_bytes[0] != 0x04 {
-            return Err(U2fError::InvalidPublicKey);
-        }
+		if public_key_bytes[0] != 0x04 {
+			return Err(U2fError::InvalidPublicKey);
+		}
 
-        let mut x: [u8; 32] = Default::default();
-        x.copy_from_slice(&public_key_bytes[1..=32]);
+		let mut x: [u8; 32] = Default::default();
+		x.copy_from_slice(&public_key_bytes[1..=32]);
 
-        let mut y: [u8; 32] = Default::default();
-        y.copy_from_slice(&public_key_bytes[33..=64]);
+		let mut y: [u8; 32] = Default::default();
+		y.copy_from_slice(&public_key_bytes[33..=64]);
 
-        Ok(NISTP256Key { x, y })
-    }
+		Ok(NISTP256Key { x, y })
+	}
 
-    fn get_key(&self) -> Result<ec::EcKey<Public>, U2fError> {
-        let ec_group = ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?;
+	fn get_key(&self) -> Result<ec::EcKey<Public>, U2fError> {
+		let ec_group = ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?;
 
-        let xbn = bn::BigNum::from_slice(&self.x)?;
-        let ybn = bn::BigNum::from_slice(&self.y)?;
+		let xbn = bn::BigNum::from_slice(&self.x)?;
+		let ybn = bn::BigNum::from_slice(&self.y)?;
 
-        let ec_key = openssl::ec::EcKey::from_public_key_affine_coordinates(&ec_group, &xbn, &ybn)?;
+		let ec_key = openssl::ec::EcKey::from_public_key_affine_coordinates(&ec_group, &xbn, &ybn)?;
 
-        // Validate the key is sound. IIRC this actually checks the values
-        // are correctly on the curve as specified
-        ec_key.check_key()?;
+		// Validate the key is sound. IIRC this actually checks the values
+		// are correctly on the curve as specified
+		ec_key.check_key()?;
 
-        Ok(ec_key)
-    }
+		Ok(ec_key)
+	}
 
-    pub fn verify_signature(
-        &self,
-        signature: &[u8],
-        verification_data: &[u8],
-    ) -> Result<bool, U2fError> {
-        let pkey = self.get_key()?;
+	pub fn verify_signature(
+		&self,
+		signature: &[u8],
+		verification_data: &[u8],
+	) -> Result<bool, U2fError> {
+		let pkey = self.get_key()?;
 
-        let signature = openssl::ecdsa::EcdsaSig::from_der(signature)?;
-        let hash = openssl::sha::sha256(verification_data);
+		let signature = openssl::ecdsa::EcdsaSig::from_der(signature)?;
+		let hash = openssl::sha::sha256(verification_data);
 
-        Ok(signature.verify(hash.as_ref(), &pkey)?)
-    }
+		Ok(signature.verify(hash.as_ref(), &pkey)?)
+	}
 }

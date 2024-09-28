@@ -1,5 +1,15 @@
 {
+<<<<<<< HEAD
 	"name": "tauri-plugin-authenticator-api",
+=======
+	"authors": [
+		"Tauri Programme within The Commons Conservancy"
+	],
+	"browser": "dist-js/index.min.js",
+	"dependencies": {
+		"@tauri-apps/api": "2.0.0-rc.5"
+	},
+>>>>>>> d037c943b7da80e99033794b17f2516dfce8c9b0
 	"description": "Use hardware security-keys in your Tauri App.",
 	"exports": {
 		"browser": "./dist-js/index.min.js",
