@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
+use std::convert::TryFrom;
+
 use byteorder::{BigEndian, ByteOrder};
 use bytes::{BufMut, Bytes};
 use openssl::sha::sha256;
 use serde::Serialize;
 
 use crate::u2f_crate::{messages::RegisteredKey, u2ferror::U2fError, util::*};
-use std::convert::TryFrom;
 
 /// The `Result` type used in this crate.
 type Result<T> = ::std::result::Result<T, U2fError>;
@@ -17,18 +18,18 @@ type Result<T> = ::std::result::Result<T, U2fError>;
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Registration {
-	pub key_handle: Vec<u8>,
-	pub pub_key: Vec<u8>,
+	pub key_handle:Vec<u8>,
+	pub pub_key:Vec<u8>,
 
 	// AttestationCert can be null for Authenticate requests.
-	pub attestation_cert: Option<Vec<u8>>,
-	pub device_name: Option<String>,
+	pub attestation_cert:Option<Vec<u8>>,
+	pub device_name:Option<String>,
 }
 
 pub fn parse_registration(
-	app_id: String,
-	client_data: Vec<u8>,
-	registration_data: Vec<u8>,
+	app_id:String,
+	client_data:Vec<u8>,
+	registration_data:Vec<u8>,
 ) -> Result<Registration> {
 	let reserved_byte = registration_data[0];
 	if reserved_byte != 0x05 {
@@ -37,7 +38,7 @@ pub fn parse_registration(
 
 	let mut mem = Bytes::from(registration_data);
 
-	//Start parsing ... advance the reserved byte.
+	// Start parsing ... advance the reserved byte.
 	let _ = mem.split_to(1);
 
 	// P-256 NIST elliptic curve
@@ -65,8 +66,8 @@ pub fn parse_registration(
 	msg.put(key_handle.clone());
 	msg.put(public_key.clone());
 
-	// The signature is to be verified by the relying party using the public key certified
-	// in the attestation certificate.
+	// The signature is to be verified by the relying party using the public key
+	// certified in the attestation certificate.
 	let cerificate_public_key =
 		super::crypto::X509PublicKey::try_from(&attestation_certificate[..])?;
 
@@ -74,26 +75,27 @@ pub fn parse_registration(
 		return Err(U2fError::BadCertificate);
 	}
 
-	let verified = cerificate_public_key.verify_signature(&signature[..], &msg[..])?;
+	let verified =
+		cerificate_public_key.verify_signature(&signature[..], &msg[..])?;
 
 	if !verified {
 		return Err(U2fError::BadCertificate);
 	}
 
 	let registration = Registration {
-		key_handle: key_handle[..].to_vec(),
-		pub_key: public_key[..].to_vec(),
-		attestation_cert: Some(attestation_certificate[..].to_vec()),
-		device_name: cerificate_public_key.common_name(),
+		key_handle:key_handle[..].to_vec(),
+		pub_key:public_key[..].to_vec(),
+		attestation_cert:Some(attestation_certificate[..].to_vec()),
+		device_name:cerificate_public_key.common_name(),
 	};
 
 	Ok(registration)
 }
 
-pub fn get_registered_key(app_id: String, key_handle: Vec<u8>) -> RegisteredKey {
+pub fn get_registered_key(app_id:String, key_handle:Vec<u8>) -> RegisteredKey {
 	RegisteredKey {
 		app_id,
-		version: U2F_V2.into(),
-		key_handle: Some(get_encoded(key_handle.as_slice())),
+		version:U2F_V2.into(),
+		key_handle:Some(get_encoded(key_handle.as_slice())),
 	}
 }
