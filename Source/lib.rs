@@ -18,11 +18,7 @@ type Result<T> = std::result::Result<T, Error>;
 fn init_auth() { auth::init_usb(); }
 
 #[tauri::command]
-fn register(
-	timeout:u64,
-	challenge:String,
-	application:String,
-) -> crate::Result<String> {
+fn register(timeout:u64, challenge:String, application:String) -> crate::Result<String> {
 	auth::register(application, timeout, challenge)
 }
 
@@ -55,14 +51,7 @@ fn verify_signature(
 	key_handle:String,
 	pubkey:String,
 ) -> crate::Result<u32> {
-	u2f::verify_signature(
-		application,
-		challenge,
-		sign_data,
-		client_data,
-		key_handle,
-		pubkey,
-	)
+	u2f::verify_signature(application, challenge, sign_data, client_data, key_handle, pubkey)
 }
 
 pub fn init<R:Runtime>() -> TauriPlugin<R> {

@@ -53,8 +53,7 @@ pub fn parse_sign_response(
 		return Err(U2fError::BadSignature);
 	}
 
-	let authorization =
-		Authorization { counter:get_counter(counter), user_presence:true };
+	let authorization = Authorization { counter:get_counter(counter), user_presence:true };
 
 	Ok(authorization)
 }

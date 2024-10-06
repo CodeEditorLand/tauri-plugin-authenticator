@@ -6,13 +6,7 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use chrono::{prelude::*, Duration};
 use serde::{Deserialize, Serialize};
 
-use crate::u2f_crate::{
-	authorization::*,
-	messages::*,
-	register::*,
-	u2ferror::U2fError,
-	util::*,
-};
+use crate::u2f_crate::{authorization::*, messages::*, register::*, u2ferror::U2fError, util::*};
 
 type Result<T> = ::std::result::Result<T, U2fError>;
 
@@ -33,11 +27,7 @@ impl Challenge {
 	// Not used in this plugin.
 	#[allow(dead_code)]
 	pub fn new() -> Self {
-		Challenge {
-			app_id:String::new(),
-			challenge:String::new(),
-			timestamp:String::new(),
-		}
+		Challenge { app_id:String::new(), challenge:String::new(), timestamp:String::new() }
 	}
 }
 
@@ -79,10 +69,7 @@ impl U2f {
 	fn register_request(&self, challenge:Challenge) -> Vec<RegisterRequest> {
 		let mut requests:Vec<RegisterRequest> = vec![];
 
-		let request = RegisterRequest {
-			version:U2F_V2.into(),
-			challenge:challenge.challenge,
-		};
+		let request = RegisterRequest { version:U2F_V2.into(), challenge:challenge.challenge };
 		requests.push(request);
 
 		requests
@@ -99,23 +86,16 @@ impl U2f {
 
 		let registration_data:Vec<u8> =
 			URL_SAFE_NO_PAD.decode(&response.registration_data[..]).unwrap();
-		let client_data:Vec<u8> =
-			URL_SAFE_NO_PAD.decode(&response.client_data[..]).unwrap();
+		let client_data:Vec<u8> = URL_SAFE_NO_PAD.decode(&response.client_data[..]).unwrap();
 
 		parse_registration(challenge.app_id, client_data, registration_data)
 	}
 
-	fn registered_keys(
-		&self,
-		registrations:Vec<Registration>,
-	) -> Vec<RegisteredKey> {
+	fn registered_keys(&self, registrations:Vec<Registration>) -> Vec<RegisteredKey> {
 		let mut keys:Vec<RegisteredKey> = vec![];
 
 		for registration in registrations {
-			keys.push(get_registered_key(
-				self.app_id.clone(),
-				registration.key_handle,
-			));
+			keys.push(get_registered_key(self.app_id.clone(), registration.key_handle));
 		}
 
 		keys
@@ -131,10 +111,7 @@ impl U2f {
 		let mut keys:Vec<RegisteredKey> = vec![];
 
 		for registration in registrations {
-			keys.push(get_registered_key(
-				self.app_id.clone(),
-				registration.key_handle,
-			));
+			keys.push(get_registered_key(self.app_id.clone(), registration.key_handle));
 		}
 
 		let signed_request = U2fSignRequest {

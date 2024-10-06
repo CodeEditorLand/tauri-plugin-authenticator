@@ -75,8 +75,7 @@ pub fn parse_registration(
 		return Err(U2fError::BadCertificate);
 	}
 
-	let verified =
-		cerificate_public_key.verify_signature(&signature[..], &msg[..])?;
+	let verified = cerificate_public_key.verify_signature(&signature[..], &msg[..])?;
 
 	if !verified {
 		return Err(U2fError::BadCertificate);

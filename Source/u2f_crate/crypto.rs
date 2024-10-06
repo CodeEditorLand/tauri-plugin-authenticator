@@ -44,9 +44,7 @@ pub struct X509PublicKey {
 }
 
 impl std::fmt::Debug for X509PublicKey {
-	fn fmt(&self, f:&mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "X509PublicKey")
-	}
+	fn fmt(&self, f:&mut std::fmt::Formatter) -> std::fmt::Result { write!(f, "X509PublicKey") }
 }
 
 impl TryFrom<&[u8]> for X509PublicKey {
@@ -86,8 +84,7 @@ impl X509PublicKey {
 
 		let ec_grpref = ec_key.group();
 
-		let ec_curve =
-			ec_grpref.curve_name().ok_or(U2fError::OpenSSLNoCurveName)?;
+		let ec_curve = ec_grpref.curve_name().ok_or(U2fError::OpenSSLNoCurveName)?;
 
 		Ok(ec_curve == nid::Nid::X9_62_PRIME256V1)
 	}
@@ -101,8 +98,7 @@ impl X509PublicKey {
 
 		// TODO: Should this determine the hash type from the x509 cert? Or
 		// other?
-		let mut verifier =
-			sign::Verifier::new(hash::MessageDigest::sha256(), &pkey)?;
+		let mut verifier = sign::Verifier::new(hash::MessageDigest::sha256(), &pkey)?;
 		verifier.update(verification_data)?;
 		Ok(verifier.verify(signature)?)
 	}
@@ -135,15 +131,12 @@ impl NISTP256Key {
 	}
 
 	fn get_key(&self) -> Result<ec::EcKey<Public>, U2fError> {
-		let ec_group =
-			ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?;
+		let ec_group = ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?;
 
 		let xbn = bn::BigNum::from_slice(&self.x)?;
 		let ybn = bn::BigNum::from_slice(&self.y)?;
 
-		let ec_key = openssl::ec::EcKey::from_public_key_affine_coordinates(
-			&ec_group, &xbn, &ybn,
-		)?;
+		let ec_key = openssl::ec::EcKey::from_public_key_affine_coordinates(&ec_group, &xbn, &ybn)?;
 
 		// Validate the key is sound. IIRC this actually checks the values
 		// are correctly on the curve as specified

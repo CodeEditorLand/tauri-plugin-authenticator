@@ -23,8 +23,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 static MANAGER:Lazy<Mutex<AuthenticatorService>> = Lazy::new(|| {
-	let manager = AuthenticatorService::new()
-		.expect("The auth service should initialize safely");
+	let manager = AuthenticatorService::new().expect("The auth service should initialize safely");
 	Mutex::new(manager)
 });
 
@@ -43,11 +42,7 @@ pub struct Registration {
 	pub client_data:String,
 }
 
-pub fn register(
-	application:String,
-	timeout:u64,
-	challenge:String,
-) -> crate::Result<String> {
+pub fn register(application:String, timeout:u64, challenge:String) -> crate::Result<String> {
 	let (chall_bytes, app_bytes, client_data_string) =
 		format_client_data(application.as_str(), challenge.as_str());
 
@@ -73,9 +68,8 @@ pub fn register(
 
 	match res {
 		Ok(_r) => {
-			let register_result = register_rx
-				.recv()
-				.expect("Problem receiving, unable to continue");
+			let register_result =
+				register_rx.recv().expect("Problem receiving, unable to continue");
 
 			if let Err(e) = register_result {
 				return Err(e.into());
@@ -87,10 +81,7 @@ pub fn register(
 			println!("Device info: {}", &device_info);
 
 			let (key_handle, public_key) =
-				_u2f_get_key_handle_and_public_key_from_register_response(
-					&register_data,
-				)
-				.unwrap();
+				_u2f_get_key_handle_and_public_key_from_register_response(&register_data).unwrap();
 			let key_handle_base64 = URL_SAFE_NO_PAD.encode(key_handle);
 			let public_key_base64 = URL_SAFE_NO_PAD.encode(public_key);
 			let register_data_base64 = URL_SAFE_NO_PAD.encode(&register_data);
@@ -130,11 +121,9 @@ pub fn sign(
 			return Err(e.into());
 		},
 	};
-	let key_handle =
-		KeyHandle { credential, transports:AuthenticatorTransports::empty() };
+	let key_handle = KeyHandle { credential, transports:AuthenticatorTransports::empty() };
 
-	let (chall_bytes, app_bytes, _) =
-		format_client_data(application.as_str(), challenge.as_str());
+	let (chall_bytes, app_bytes, _) = format_client_data(application.as_str(), challenge.as_str());
 
 	let (sign_tx, sign_rx) = channel();
 	let callback = StateCallback::new(Box::new(move |rv| {
@@ -157,8 +146,7 @@ pub fn sign(
 	);
 	match res {
 		Ok(_v) => {
-			let sign_result =
-				sign_rx.recv().expect("Problem receiving, unable to continue");
+			let sign_result = sign_rx.recv().expect("Problem receiving, unable to continue");
 
 			if let Err(e) = sign_result {
 				return Err(e.into());
@@ -169,10 +157,7 @@ pub fn sign(
 			let sig = URL_SAFE_NO_PAD.encode(sign_data);
 
 			println!("Sign result: {sig}");
-			println!(
-				"Key handle used: {}",
-				URL_SAFE_NO_PAD.encode(&handle_used)
-			);
+			println!("Key handle used: {}", URL_SAFE_NO_PAD.encode(&handle_used));
 			println!("Device info: {}", &device_info);
 			println!("Done.");
 
@@ -186,13 +171,9 @@ pub fn sign(
 	}
 }
 
-fn format_client_data(
-	application:&str,
-	challenge:&str,
-) -> (Vec<u8>, Vec<u8>, String) {
-	let d = format!(
-		r#"{{"challenge": "{challenge}", "version": "U2F_V2", "appId": "{application}"}}"#
-	);
+fn format_client_data(application:&str, challenge:&str) -> (Vec<u8>, Vec<u8>, String) {
+	let d =
+		format!(r#"{{"challenge": "{challenge}", "version": "U2F_V2", "appId": "{application}"}}"#);
 	let mut challenge = Sha256::new();
 	challenge.update(d.as_bytes());
 	let chall_bytes = challenge.finalize().to_vec();
@@ -208,10 +189,7 @@ fn _u2f_get_key_handle_and_public_key_from_register_response(
 	register_response:&[u8],
 ) -> io::Result<(Vec<u8>, Vec<u8>)> {
 	if register_response[0] != 0x05 {
-		return Err(io::Error::new(
-			io::ErrorKind::InvalidData,
-			"Reserved byte not set correctly",
-		));
+		return Err(io::Error::new(io::ErrorKind::InvalidData, "Reserved byte not set correctly"));
 	}
 
 	// 1: reserved
