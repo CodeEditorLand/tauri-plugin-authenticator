@@ -32,6 +32,7 @@ pub fn parse_registration(
 	registration_data:Vec<u8>,
 ) -> Result<Registration> {
 	let reserved_byte = registration_data[0];
+
 	if reserved_byte != 0x05 {
 		return Err(U2fError::InvalidReservedByte);
 	}
@@ -46,11 +47,14 @@ pub fn parse_registration(
 
 	// Key Handle
 	let key_handle_size = mem.split_to(1);
+
 	let key_len = BigEndian::read_uint(&key_handle_size[..], 1);
+
 	let key_handle = mem.split_to(key_len as usize);
 
 	// The certificate length needs to be inferred by parsing.
 	let cert_len = asn_length(mem.clone()).unwrap();
+
 	let attestation_certificate = mem.split_to(cert_len);
 
 	// Remaining data corresponds to the signature
@@ -58,12 +62,16 @@ pub fn parse_registration(
 
 	// Let's build the msg to verify the signature
 	let app_id_hash = sha256(&app_id.into_bytes());
+
 	let client_data_hash = sha256(&client_data[..]);
 
 	let mut msg = vec![0x00]; // A byte reserved for future use [1 byte] with the value 0x00
 	msg.put(app_id_hash.as_ref());
+
 	msg.put(client_data_hash.as_ref());
+
 	msg.put(key_handle.clone());
+
 	msg.put(public_key.clone());
 
 	// The signature is to be verified by the relying party using the public key

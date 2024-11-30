@@ -17,7 +17,9 @@ pub const U2F_V2:&str = "U2F_V2";
 // Generates a challenge from a secure, random source.
 pub fn generate_challenge(size:usize) -> Result<Vec<u8>> {
 	let mut bytes:Vec<u8> = vec![0; size];
+
 	rand::rand_bytes(&mut bytes).map_err(|_e| U2fError::RandomSecureBytesError)?;
+
 	Ok(bytes)
 }
 
@@ -45,11 +47,13 @@ pub fn asn_length(mem:Bytes) -> Result<usize> {
 	}
 
 	let numbem_of_bytes = len & 0x7F;
+
 	if numbem_of_bytes == 0 {
 		return Err(U2fError::Asm1DecoderError);
 	}
 
 	let mut length:usize = 0;
+
 	for num in 0..numbem_of_bytes {
 		length = length * 0x100 + (buffer[(2 + num) as usize] as usize);
 	}

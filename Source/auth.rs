@@ -24,6 +24,7 @@ use sha2::{Digest, Sha256};
 
 static MANAGER:Lazy<Mutex<AuthenticatorService>> = Lazy::new(|| {
 	let manager = AuthenticatorService::new().expect("The auth service should initialize safely");
+
 	Mutex::new(manager)
 });
 
@@ -52,6 +53,7 @@ pub fn register(application:String, timeout:u64, challenge:String) -> crate::Res
 	let mut manager = MANAGER.lock().unwrap();
 
 	let (register_tx, register_rx) = channel();
+
 	let callback = StateCallback::new(Box::new(move |rv| {
 		register_tx.send(rv).unwrap();
 	}));
@@ -78,14 +80,20 @@ pub fn register(application:String, timeout:u64, challenge:String) -> crate::Res
 			let (register_data, device_info) = register_result.unwrap(); // error already has been checked
 
 			// println!("Register result: {}", base64::encode(&register_data));
+
 			println!("Device info: {}", &device_info);
 
 			let (key_handle, public_key) =
 				_u2f_get_key_handle_and_public_key_from_register_response(&register_data).unwrap();
+
 			let key_handle_base64 = URL_SAFE_NO_PAD.encode(key_handle);
+
 			let public_key_base64 = URL_SAFE_NO_PAD.encode(public_key);
+
 			let register_data_base64 = URL_SAFE_NO_PAD.encode(&register_data);
+
 			println!("Key Handle: {}", &key_handle_base64);
+
 			println!("Public Key: {}", &public_key_base64);
 
 			// Ok(base64::encode(&register_data))
@@ -96,6 +104,7 @@ pub fn register(application:String, timeout:u64, challenge:String) -> crate::Res
 				register_data:register_data_base64,
 				client_data:client_data_string,
 			})?;
+
 			Ok(res)
 		},
 		Err(e) => Err(e.into()),
@@ -121,11 +130,13 @@ pub fn sign(
 			return Err(e.into());
 		},
 	};
+
 	let key_handle = KeyHandle { credential, transports:AuthenticatorTransports::empty() };
 
 	let (chall_bytes, app_bytes, _) = format_client_data(application.as_str(), challenge.as_str());
 
 	let (sign_tx, sign_rx) = channel();
+
 	let callback = StateCallback::new(Box::new(move |rv| {
 		sign_tx.send(rv).unwrap();
 	}));
@@ -144,6 +155,7 @@ pub fn sign(
 		status_tx,
 		callback,
 	);
+
 	match res {
 		Ok(_v) => {
 			let sign_result = sign_rx.recv().expect("Problem receiving, unable to continue");
@@ -157,14 +169,18 @@ pub fn sign(
 			let sig = URL_SAFE_NO_PAD.encode(sign_data);
 
 			println!("Sign result: {sig}");
+
 			println!("Key handle used: {}", URL_SAFE_NO_PAD.encode(&handle_used));
+
 			println!("Device info: {}", &device_info);
+
 			println!("Done.");
 
 			let res = serde_json::to_string(&Signature {
 				sign_data:sig,
 				key_handle:URL_SAFE_NO_PAD.encode(&handle_used),
 			})?;
+
 			Ok(res)
 		},
 		Err(e) => Err(e.into()),
@@ -174,12 +190,17 @@ pub fn sign(
 fn format_client_data(application:&str, challenge:&str) -> (Vec<u8>, Vec<u8>, String) {
 	let d =
 		format!(r#"{{"challenge": "{challenge}", "version": "U2F_V2", "appId": "{application}"}}"#);
+
 	let mut challenge = Sha256::new();
+
 	challenge.update(d.as_bytes());
+
 	let chall_bytes = challenge.finalize().to_vec();
 
 	let mut app = Sha256::new();
+
 	app.update(application.as_bytes());
+
 	let app_bytes = app.finalize().to_vec();
 
 	(chall_bytes, app_bytes, d)
@@ -200,8 +221,11 @@ fn _u2f_get_key_handle_and_public_key_from_register_response(
 	// sig
 
 	let key_handle_len = register_response[66] as usize;
+
 	let mut public_key = register_response.to_owned();
+
 	let mut key_handle = public_key.split_off(67);
+
 	let _attestation = key_handle.split_off(key_handle_len);
 
 	// remove fist (reserved) and last (handle len) bytes

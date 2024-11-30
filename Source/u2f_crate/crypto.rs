@@ -53,6 +53,7 @@ impl TryFrom<&[u8]> for X509PublicKey {
 	// Must be DER bytes. If you have PEM, base64decode first!
 	fn try_from(d:&[u8]) -> Result<Self, Self::Error> {
 		let pubk = x509::X509::from_der(d)?;
+
 		Ok(X509PublicKey { pubk })
 	}
 }
@@ -62,6 +63,7 @@ impl X509PublicKey {
 		let cert = &self.pubk;
 
 		let subject = cert.subject_name();
+
 		let common = subject
 			.entries_by_nid(openssl::nid::Nid::COMMONNAME)
 			.next()
@@ -99,7 +101,9 @@ impl X509PublicKey {
 		// TODO: Should this determine the hash type from the x509 cert? Or
 		// other?
 		let mut verifier = sign::Verifier::new(hash::MessageDigest::sha256(), &pkey)?;
+
 		verifier.update(verification_data)?;
+
 		Ok(verifier.verify(signature)?)
 	}
 }
@@ -122,9 +126,11 @@ impl NISTP256Key {
 		}
 
 		let mut x:[u8; 32] = Default::default();
+
 		x.copy_from_slice(&public_key_bytes[1..=32]);
 
 		let mut y:[u8; 32] = Default::default();
+
 		y.copy_from_slice(&public_key_bytes[33..=64]);
 
 		Ok(NISTP256Key { x, y })
@@ -134,6 +140,7 @@ impl NISTP256Key {
 		let ec_group = ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?;
 
 		let xbn = bn::BigNum::from_slice(&self.x)?;
+
 		let ybn = bn::BigNum::from_slice(&self.y)?;
 
 		let ec_key = openssl::ec::EcKey::from_public_key_affine_coordinates(&ec_group, &xbn, &ybn)?;
@@ -153,6 +160,7 @@ impl NISTP256Key {
 		let pkey = self.get_key()?;
 
 		let signature = openssl::ecdsa::EcdsaSig::from_der(signature)?;
+
 		let hash = openssl::sha::sha256(verification_data);
 
 		Ok(signature.verify(hash.as_ref(), &pkey)?)

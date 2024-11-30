@@ -14,6 +14,7 @@ static VERSION:&str = "U2F_V2";
 
 pub fn make_challenge(app_id:&str, challenge_bytes:Vec<u8>) -> Challenge {
 	let utc:DateTime<Utc> = Utc::now();
+
 	Challenge {
 		challenge:URL_SAFE_NO_PAD.encode(challenge_bytes),
 		timestamp:format!("{utc:?}"),
@@ -36,10 +37,15 @@ pub fn verify_registration(
 	client_data:String,
 ) -> crate::Result<String> {
 	let challenge_bytes = URL_SAFE_NO_PAD.decode(challenge)?;
+
 	let challenge = make_challenge(&app_id, challenge_bytes);
+
 	let client_data_bytes:Vec<u8> = client_data.as_bytes().into();
+
 	let client_data_base64 = URL_SAFE_NO_PAD.encode(client_data_bytes);
+
 	let client = U2f::new(app_id);
+
 	match client.register_response(
 		challenge,
 		RegisterResponse {
@@ -54,6 +60,7 @@ pub fn verify_registration(
 				pubkey:URL_SAFE_NO_PAD.encode(&v.pub_key),
 				device_name:v.device_name,
 			};
+
 			Ok(serde_json::to_string(&rv)?)
 		},
 		Err(e) => Err(e.into()),
@@ -75,13 +82,21 @@ pub fn verify_signature(
 	pub_key:String,
 ) -> crate::Result<u32> {
 	let challenge_bytes = URL_SAFE_NO_PAD.decode(challenge)?;
+
 	let chal = make_challenge(&app_id, challenge_bytes);
+
 	let client_data_bytes:Vec<u8> = client_data.as_bytes().into();
+
 	let client_data_base64 = URL_SAFE_NO_PAD.encode(client_data_bytes);
+
 	let key_handle_bytes = URL_SAFE_NO_PAD.decode(&key_handle)?;
+
 	let pubkey_bytes = URL_SAFE_NO_PAD.decode(pub_key)?;
+
 	let client = U2f::new(app_id);
+
 	let mut _counter:u32 = 0;
+
 	match client.sign_response(
 		chal,
 		Registration {
