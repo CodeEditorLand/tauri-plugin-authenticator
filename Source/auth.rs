@@ -5,19 +5,19 @@
 use std::{
 	convert::Into,
 	io,
-	sync::{mpsc::channel, Mutex},
+	sync::{Mutex, mpsc::channel},
 };
 
 use authenticator::{
-	authenticatorservice::AuthenticatorService,
-	statecallback::StateCallback,
 	AuthenticatorTransports,
 	KeyHandle,
 	RegisterFlags,
 	SignFlags,
 	StatusUpdate,
+	authenticatorservice::AuthenticatorService,
+	statecallback::StateCallback,
 };
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use sha2::{Digest, Sha256};

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use bytes::Bytes;
-use chrono::{prelude::*, Duration};
+use chrono::{Duration, prelude::*};
 use openssl::rand;
 
 use crate::u2f_crate::u2ferror::U2fError;

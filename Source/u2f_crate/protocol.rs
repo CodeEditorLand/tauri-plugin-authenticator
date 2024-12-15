@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
-use chrono::{prelude::*, Duration};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use chrono::{Duration, prelude::*};
 use serde::{Deserialize, Serialize};
 
 use crate::u2f_crate::{authorization::*, messages::*, register::*, u2ferror::U2fError, util::*};

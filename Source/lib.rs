@@ -9,8 +9,8 @@ mod u2f_crate;
 
 pub use error::Error;
 use tauri::{
-	plugin::{Builder as PluginBuilder, TauriPlugin},
 	Runtime,
+	plugin::{Builder as PluginBuilder, TauriPlugin},
 };
 type Result<T> = std::result::Result<T, Error>;
 
