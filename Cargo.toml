@@ -1,5 +1,5 @@
 [dependencies]
-authenticator = "0.3.1"
+authenticator = "0.4.1"
 base64 = "0.22"
 byteorder = "1"
 bytes = "1"
@@ -14,7 +14,7 @@ tauri = { version = "2.2.5" }
 thiserror = { version = "2.0.11" }
 
 [dev-dependencies]
-rand = "0.8"
+rand = "0.9"
 rusty-fork = "0.3"
 
 [lib]
@@ -23,8 +23,8 @@ path = "Source/lib.rs"
 [package]
 authors = ["Tauri Programme within The Commons Conservancy"]
 description = "Use hardware security-keys in your Tauri App."
-edition = "2021"
+edition = "2024"
 license-file = "LICENSE"
 name = "tauri-plugin-authenticator"
-rust-version = "1.77.2"
+rust-version = "1.85.0"
 version = "0.0.0"
